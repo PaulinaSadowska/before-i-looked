@@ -1,8 +1,9 @@
 ---
 plan: morning-digest
-status: ready
+status: done
 owner: rook
 opened: 2026-10-29
+closed: 2026-10-29
 ---
 
 # Morning digest
@@ -77,3 +78,16 @@ page again with `LANE_MARKER` unset (the banner reads "no marker set") and uploa
 link. Move this plan to `docs/plans/done/` with its issue list.
 
 Done when: the preview link no longer shows the lane marker.
+
+## Issues
+
+| # | Issue | URL |
+|---|-------|-----|
+| 1 | Define digest contracts | https://github.com/PaulinaSadowska/before-i-looked/issues/1 |
+| 2 | Read and aggregate run logs | https://github.com/PaulinaSadowska/before-i-looked/issues/2 |
+| 3 | Render the digest page | https://github.com/PaulinaSadowska/before-i-looked/issues/3 |
+| 4 | Add the digest JSON API | https://github.com/PaulinaSadowska/before-i-looked/issues/4 |
+| 5 | Link status-board nights to digests | https://github.com/PaulinaSadowska/before-i-looked/issues/5 |
+| 6 | Add digest route tests | https://github.com/PaulinaSadowska/before-i-looked/issues/6 |
+| 7 | Publish the marked review preview | https://github.com/PaulinaSadowska/before-i-looked/issues/7 |
+| 8 | Remove the marker and archive the plan | https://github.com/PaulinaSadowska/before-i-looked/issues/8 |
