@@ -1,0 +1,76 @@
+name: Deploy marked digest preview
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: pages-preview
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@12.16.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm test
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Capture marked digest
+        env:
+          LANE_MARKER: ${{ secrets.LANE_MARKER }}
+          PORT: 8787
+        run: |
+          test -n "$LANE_MARKER"
+          preview_dir="$RUNNER_TEMP/pages-preview"
+          mkdir -p "$preview_dir/_site"
+
+          pnpm start >"$preview_dir/rig.log" 2>&1 &
+          rig_pid=$!
+          trap 'kill "$rig_pid" 2>/dev/null || true' EXIT
+
+          curl --fail --silent --show-error \
+            --retry 10 --retry-connrefused --retry-delay 1 \
+            --output "$preview_dir/_site/index.html" \
+            http://127.0.0.1:8787/digest/2026-10-28
+          test -s "$preview_dir/_site/index.html"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ${{ runner.temp }}/pages-preview/_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
