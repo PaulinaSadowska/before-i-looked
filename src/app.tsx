@@ -9,7 +9,7 @@ import { StatusBoard } from './views/status.js';
 
 type ReadNight = typeof digestReader.readNight;
 
-function isMissingFile(error: unknown): boolean {
+function isMissingNight(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error && error.code === 'ENOENT';
 }
 
@@ -17,6 +17,21 @@ export function createApp(config: RigConfig = loadConfig(), readNight: ReadNight
   const app = new Hono();
 
   app.get('/health', (c) => c.json({ ok: true, lane: lane().id }));
+
+  app.get('/api/digest/:night', (c) => {
+    try {
+      const nightDigest = readNight(config.runsDir, c.req.param('night'));
+      const rows = [...nightDigest.rows].sort((a, b) => a.job.localeCompare(b.job));
+
+      return c.json({ ...nightDigest, rows });
+    } catch (error) {
+      if (isMissingNight(error)) {
+        return c.json({ error: 'night not found' }, 404);
+      }
+
+      throw error;
+    }
+  });
 
   app.get('/', (c) =>
     c.html(
@@ -37,7 +52,7 @@ export function createApp(config: RigConfig = loadConfig(), readNight: ReadNight
         </Layout>,
       );
     } catch (error: unknown) {
-      if (!isMissingFile(error)) throw error;
+      if (!isMissingNight(error)) throw error;
 
       return c.html(
         <Layout title={`digest · ${night}`} lane={lane()}>
